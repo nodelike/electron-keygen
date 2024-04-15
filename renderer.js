@@ -1,33 +1,33 @@
-const { validateLicenseKey } = window.electron;
-const usbDeviceSelect = document.getElementById('usbDeviceSelect');
-const selectedUsbDeviceKey = document.getElementById('selectedUsbDeviceKey');
-const licenseKeyInput = document.getElementById('licenseKeyInput');
-const validateBtn = document.getElementById('validateBtn');
+const validKeys = ['ABC123', 'DEF456', 'GHI789']; // Replace with your valid serial number keys
+const usbDriveSelect = document.getElementById('usbDriveSelect');
+const serialNumberEl = document.getElementById('serialNumber');
+const authenticateBtn = document.getElementById('authenticateBtn');
+const resultEl = document.getElementById('result');
 
-// Populate the dropdown with USB devices
-const devices = usb.getDeviceList();
-for (const device of devices) {
-  const option = document.createElement('option');
-  option.value = device.deviceDescriptor.iSerialNumber || 'Unknown Serial Number';
-  option.text = option.value;
-  usbDeviceSelect.add(option);
+async function populateUSBDrives() {
+  const connectedDrives = await window.api.getConnectedUSBDrives();
+  usbDriveSelect.innerHTML = connectedDrives.map(drive => `<option value="${drive.deviceAddress}">${drive.deviceName}</option>`).join('');
+  authenticateBtn.disabled = connectedDrives.length === 0;
+  updateSerialNumber(); // Call updateSerialNumber after populating the USB drives
 }
 
-usbDeviceSelect.addEventListener('change', () => {
-  const selectedDevice = usbDeviceSelect.options[usbDeviceSelect.selectedIndex];
-  selectedUsbDeviceKey.textContent = selectedDevice.value;
-});
+async function updateSerialNumber() {
+  const selectedDeviceId = usbDriveSelect.value;
+  const serialNumber = await window.api.getSerialNumber(selectedDeviceId);
+  serialNumberEl.textContent = `Serial Number: ${serialNumber}`;
+}
 
-validateBtn.addEventListener('click', () => {
-  const licenseKey = licenseKeyInput.value;
-  if (licenseKey) {
-    const serialNumber = validateLicenseKey(licenseKey);
-    if (serialNumber) {
-      console.log(`Hardware key (serial number): ${serialNumber}`);
-    } else {
-      console.error('Invalid license key');
-    }
+populateUSBDrives();
+
+usbDriveSelect.addEventListener('change', updateSerialNumber);
+
+authenticateBtn.addEventListener('click', async () => {
+  const selectedDeviceId = usbDriveSelect.value;
+  const serialNumber = await window.api.getSerialNumber(selectedDeviceId);
+  const isValid = await window.api.validateSerialNumber(serialNumber, validKeys);
+  if (isValid) {
+    resultEl.textContent = 'Authentication successful!';
   } else {
-    console.error('Please enter a license key');
+    resultEl.textContent = 'Invalid serial number.';
   }
 });

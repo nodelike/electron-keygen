@@ -1,8 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const SerialPort = require('serialport');
-const list = SerialPort.list;
-const Readline = require('@serialport/parser-readline');
+const usbDetect = require('usb-detection');
 
 let mainWindow;
 
@@ -37,51 +35,35 @@ app.on('activate', () => {
 });
 
 ipcMain.handle('get-connected-usb-drives', async () => {
-  const ports = await list();
-  const usbDrives = [];
-
-  for (const port of ports) {
-    const parser = new Readline();
-    const portObj = new SerialPort(port.comName, { baudRate: 9600 });
-    portObj.pipe(parser);
-
-    portObj.on('open', () => {
-      portObj.write('get_usb_name');
+  try {
+    const devices = await usbDetect.find();
+    const usbDrives = devices.filter(device => {
+      return device.deviceName.toLowerCase().includes('mass storage') ||
+             device.deviceName.toLowerCase().includes('usb drive') ||
+             device.deviceName.toLowerCase().includes('usb disk');
     });
-
-    let usbName = null;
-    parser.on('data', (data) => {
-      usbName = data.toString().trim();
-      portObj.close();
-    });
-
-    await new Promise(resolve => portObj.on('close', resolve));
-
-    if (usbName) {
-      usbDrives.push({ path: port.comName, name: usbName });
-    }
+    console.log('Connected USB drives:', usbDrives);
+    return usbDrives;
+  } catch (error) {
+    console.error('Error:', error);
+    return [];
   }
-
-  return usbDrives;
 });
 
-
-ipcMain.handle('get-serial-number', async (event, portPath) => {
-  const port = new SerialPort(portPath, { baudRate: 9600 });
-
-  port.on('open', () => {
-    port.write('get_serial_number');
-  });
-
-  let serialNumber = null;
-  port.on('data', (data) => {
-    serialNumber = data.toString().trim();
-    port.close();
-  });
-
-  await new Promise(resolve => port.on('close', resolve));
-
-  return serialNumber;
+ipcMain.handle('get-serial-number', async (event, deviceAddress) => {
+  try {
+    const devices = await usbDetect.find();
+    const device = devices.find(dev => dev.deviceAddress === parseInt(deviceAddress));
+    console.log('Selected device:', device);
+    if (device && device.serialNumber) {
+      return device.serialNumber;
+    } else {
+      return 'Serial Number Not Available';
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    return 'Serial Number Not Available';
+  }
 });
 
 ipcMain.handle('validate-serial-number', (event, serialNumber, validKeys) => {

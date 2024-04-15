@@ -1,13 +1,7 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { ipcRenderer, contextBridge } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
-  getConnectedUSBDrives: async () => {
-    return await ipcRenderer.invoke('get-connected-usb-drives');
-  },
-  getSerialNumber: async (portPath) => {
-    return await ipcRenderer.invoke('get-serial-number', portPath);
-  },
-  validateSerialNumber: async (serialNumber, validKeys) => {
-    return await ipcRenderer.invoke('validate-serial-number', serialNumber, validKeys);
-  }
+  getConnectedUSBDrives: () => ipcRenderer.invoke('get-connected-usb-drives'),
+  getSerialNumber: (deviceId) => ipcRenderer.invoke('get-serial-number', deviceId),
+  validateSerialNumber: (serialNumber, validKeys) => ipcRenderer.invoke('validate-serial-number', serialNumber, validKeys),
 });
