@@ -1,16 +1,23 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>USB Drive Authenticator</title>
-  </head>
-  <body>
-    <h1>USB Drive Authenticator</h1>
-    <select id="usbDriveSelect"></select>
-    <p id="serialNumber"></p>
-    <button id="authenticateBtn" disabled>Authenticate</button>
-    <p id="result"></p>
+<head>
+  <meta charset="UTF-8">
+  <title>Hardware Lock Key Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  
+  <div class="app">
+    <h1>Hardware Lock Key Generator</h1>
+    <label for="usbDriveSelect" style="flex-direction: column;  margin: 0 35px;">Select the USB drive: <select id="usbDriveSelect"></select></label>
+    <div class="usb-details">
+      <label for="serialNumber">Serial Number: <span id="serialNumber"></span></label>
+      <label for="manufacturer">Manufacturer: <span id="manufacturer"></span></label>
+      <button id="generateBtn" disabled>Generate</button>
+    </div>
+  </div>
 
-    <script src="renderer.js"></script>
-  </body>
+  <p style="font-size: 22px; margin: 0; height: 22px; margin-top: 45px; color: #0081ff;" id="result"></p>
+  <script src="renderer.js"></script>
+</body>
 </html>

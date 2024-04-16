@@ -1,20 +1,25 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const usbDetect = require('usb-detection');
+const fs = require('fs');
 
 let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 650,
+    height: 650,
+    resizable: false,
+    maximizable: false,
     webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     }
   });
 
   mainWindow.loadFile('index.html');
-
+  mainWindow.setMenu(null);
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -37,12 +42,7 @@ app.on('activate', () => {
 ipcMain.handle('get-connected-usb-drives', async () => {
   try {
     const devices = await usbDetect.find();
-    const usbDrives = devices.filter(device => {
-      return device.deviceName.toLowerCase().includes('mass storage') ||
-             device.deviceName.toLowerCase().includes('usb drive') ||
-             device.deviceName.toLowerCase().includes('usb disk');
-    });
-    console.log('Connected USB drives:', usbDrives);
+    const usbDrives = devices.filter(device => device.serialNumber != '');
     return usbDrives;
   } catch (error) {
     console.error('Error:', error);
@@ -50,13 +50,13 @@ ipcMain.handle('get-connected-usb-drives', async () => {
   }
 });
 
-ipcMain.handle('get-serial-number', async (event, deviceAddress) => {
+ipcMain.handle('get-usb-detials', async (event, deviceAddress) => {
   try {
     const devices = await usbDetect.find();
     const device = devices.find(dev => dev.deviceAddress === parseInt(deviceAddress));
-    console.log('Selected device:', device);
     if (device && device.serialNumber) {
-      return device.serialNumber;
+      console.log(device);
+      return device;
     } else {
       return 'Serial Number Not Available';
     }
@@ -66,6 +66,16 @@ ipcMain.handle('get-serial-number', async (event, deviceAddress) => {
   }
 });
 
-ipcMain.handle('validate-serial-number', (event, serialNumber, validKeys) => {
-  return validKeys.includes(serialNumber);
+ipcMain.handle('download-license-key', async (event, licenseKey) => {
+  const { filePath } = await dialog.showSaveDialog(mainWindow, {
+    defaultPath: 'license.key',
+    filters: [
+      { name: 'Key Files', extensions: ['key'] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  });
+
+  if (filePath) {
+    fs.writeFileSync(filePath, licenseKey);
+  }
 });
