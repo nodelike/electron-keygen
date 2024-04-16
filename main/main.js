@@ -11,14 +11,16 @@ function createWindow() {
     height: 650,
     resizable: false,
     maximizable: false,
+    icon: path.join(__dirname, '..', 'assets', 'logo.ico'),
     webPreferences: {
+      devTools: false,
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     }
   });
 
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile(path.join(__dirname, '..', 'src/index.html'));
   mainWindow.setMenu(null);
   mainWindow.on('closed', () => {
     mainWindow = null;

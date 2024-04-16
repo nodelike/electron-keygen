@@ -2,7 +2,7 @@
   "name": "electron-keygen",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "main/main.js",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
     "pack": "electron-builder --dir",
@@ -18,9 +18,37 @@
     "electron-rebuild": "^3.2.9"
   },
   "dependencies": {
-    "drivelist": "^12.0.2",
-    "serialport": "^9.2.8",
-    "usb": "^2.11.0",
     "usb-detection": "^4.14.2"
+  },
+  "build": {
+    "appId": "com.nodelike.electron-keygen",
+    "productName": "Electron Keygen",
+    "mac": {
+      "icon": "assets/logo.icns"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/logo.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "installerIcon": "assets/logo.ico",
+      "uninstallerIcon": "assets/logo.ico",
+      "uninstallDisplayName": "Electron Keygen",
+      "license": "license.md",
+      "allowToChangeInstallationDirectory": true
+    },
+    "npmRebuild": true,
+    "files": [
+      "**/*",
+      "!**/*.map"
+    ]
   }
 }
