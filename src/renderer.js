@@ -40,3 +40,7 @@ async function generateLicenseKey(serialNumber, salt) {
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   return hashHex;
 }
+
+window.api.onUsbDeviceChanged((devices) => {
+  populateUSBDrives(devices);
+});

@@ -27,7 +27,14 @@ function createWindow() {
   });
 }
 
-app.on('ready', createWindow);
+app.on('ready', () => {
+  createWindow();
+  usbDetect.startMonitoring();
+});
+
+app.on('quit', () => {
+  usbDetect.stopMonitoring();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -81,3 +88,20 @@ ipcMain.handle('download-license-key', async (event, licenseKey) => {
     fs.writeFileSync(filePath, licenseKey);
   }
 });
+
+usbDetect.on('add', () => {
+  sendConnectedUSBDrives();
+});
+
+usbDetect.on('remove', () => {
+  sendConnectedUSBDrives();
+});
+
+function sendConnectedUSBDrives() {
+  usbDetect.find((err, devices) => {
+    if (!err) {
+      const usbDrives = devices.filter(device => device.serialNumber != '');
+      mainWindow.webContents.send('usb-device-changed', usbDrives);
+    }
+  });
+}
